@@ -1,0 +1,35 @@
+:root {
+	--bg-top: #0b1220;
+	--bg-bottom: #14243f;
+	--text: #e7edf7;
+	--text-dim: #93a4bf;
+	--accent: #38bdf8;
+	--ok: #34d399;
+	--warn: #fbbf24;
+	--error: #f87171;
+	--glass-bg: rgba(255, 255, 255, 0.06);
+	--glass-border: rgba(255, 255, 255, 0.14);
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+body {
+	margin: 0;
+	color: var(--text);
+	background: linear-gradient(160deg, var(--bg-top), var(--bg-bottom));
+	background-attachment: fixed;
+	font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+	-webkit-font-smoothing: antialiased;
+	/* app-like: sin rebote de scroll, sin selección accidental, sin flash al tocar */
+	overscroll-behavior: none;
+	-webkit-user-select: none;
+	user-select: none;
+	-webkit-tap-highlight-color: transparent;
+}

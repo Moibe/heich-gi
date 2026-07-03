@@ -1,0 +1,31 @@
+name: deploy heich-gi 📍🛰️
+
+on:
+    push:
+        branches:
+            - main
+    workflow_dispatch: # permite correrlo a mano desde la pestaña Actions
+
+jobs:
+    deploy:
+        name: pull · build · restart
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: install ssh key
+              run: |
+                  install -m 600 -D /dev/null ~/.ssh/id_rsa
+                  echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+                  ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+
+            # Node/npm/pm2 viven en nvm; en una shell SSH no-interactiva NO están en
+            # el PATH (el .bashrc que carga nvm se salta en shells no-interactivas),
+            # así que cargamos nvm explícitamente antes de usarlos. Todo en una línea
+            # para evitar líos de comillas/continuaciones. La cadena con && aborta si
+            # algo falla, así pm2 NO reinicia con un build roto (sin downtime).
+            - name: deploy on droplet
+              run: |
+                  ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/heich-gi && git checkout main && git pull origin main && npm ci && npm run build && pm2 restart heich-gi --update-env'
+
+            - name: cleanup
+              run: rm -rf ~/.ssh
