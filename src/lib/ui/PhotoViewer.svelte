@@ -6,6 +6,15 @@
 		onclose,
 		ondelete
 	}: { photo: PhotoView; onclose: () => void; ondelete: () => void } = $props();
+
+	// bloquear el scroll de la lista de atrás mientras el visor está abierto
+	$effect(() => {
+		const previous = document.body.style.overflow;
+		document.body.style.overflow = 'hidden';
+		return () => {
+			document.body.style.overflow = previous;
+		};
+	});
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && onclose()} />
@@ -24,6 +33,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 50;
+		touch-action: none; /* iOS: que el swipe sobre la foto no scrollee la lista */
 		background: rgba(4, 8, 16, 0.92);
 		display: flex;
 		flex-direction: column;

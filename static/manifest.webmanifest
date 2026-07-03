@@ -1,7 +1,7 @@
 {
 	"id": "/",
-	"name": "Coleccionador",
-	"short_name": "Coleccionador",
+	"name": "heich-gi",
+	"short_name": "heich-gi",
 	"description": "Marca puntos específicos de tu camino y regístralos.",
 	"start_url": "/",
 	"scope": "/",

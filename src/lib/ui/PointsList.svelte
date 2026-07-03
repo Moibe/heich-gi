@@ -19,6 +19,9 @@
 </script>
 
 {#if points.ready}
+	{#if points.photoFailed}
+		<p class="photo-error">⚠️ La última foto no se pudo procesar o guardar — intenta de nuevo.</p>
+	{/if}
 	{#if points.points.length === 0}
 		<p class="empty">Aún no hay puntos — marca el primero. 📍</p>
 	{:else}
@@ -53,7 +56,11 @@
 								<img src={f.thumbUrl} alt="Foto de {p.label}" />
 							</button>
 						{/each}
-						<label class="add-photo" title="Tomar foto para este punto">
+						<label
+							class="add-photo"
+							class:off={points.photoBusy !== null && points.photoBusy !== p.id}
+							title="Tomar foto para este punto"
+						>
 							<span>{points.photoBusy === p.id ? '⏳' : '📷'}</span>
 							<input
 								type="file"
@@ -219,5 +226,17 @@
 
 	.add-photo input {
 		display: none;
+	}
+
+	.add-photo.off {
+		opacity: 0.4;
+		cursor: default;
+	}
+
+	.photo-error {
+		margin: 0 0 0.7rem;
+		font-size: 0.85rem;
+		color: var(--warn);
+		text-align: center;
 	}
 </style>

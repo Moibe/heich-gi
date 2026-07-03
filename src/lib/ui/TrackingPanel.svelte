@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { formatDate } from '$lib/domain/format/dates';
 	import { tracking } from '$lib/stores/tracking.svelte';
 	import CoordsDisplay from './CoordsDisplay.svelte';
 	import StatusBadge from './StatusBadge.svelte';
@@ -23,6 +24,17 @@
 	</div>
 
 	<CoordsDisplay point={tracking.current} />
+
+	{#if tracking.nearby.length > 0}
+		<div class="encounters">
+			{#each tracking.nearby as hit (hit.point.id)}
+				<p class="encounter">
+					📍 <strong>Ya habías estado aquí:</strong> «{hit.point.label}» — lo marcaste el
+					{formatDate(hit.point.timestamp)} (a {Math.round(hit.distance)} m)
+				</p>
+			{/each}
+		</div>
+	{/if}
 
 	{#if tracking.status === 'permission-denied'}
 		<p class="hint">
@@ -67,6 +79,29 @@
 
 	.wakelock.active {
 		color: var(--warn);
+	}
+
+	.encounters {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.encounter {
+		margin: 0;
+		padding: 0.75rem 0.9rem;
+		border-radius: 12px;
+		font-size: 0.9rem;
+		background: color-mix(in srgb, var(--accent) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+		animation: appear 0.35s ease;
+	}
+
+	@keyframes appear {
+		from {
+			opacity: 0;
+			transform: translateY(4px);
+		}
 	}
 
 	.hint {

@@ -1,6 +1,6 @@
-# heich-gi — Coleccionador
+# heich-gi
 
-PWA personal de GPS con dos modos: **tracking en vivo** (seguimiento continuo en primer plano con wake lock) y **marcar puntos específicos del camino y registrarlos**. Vive en https://coleccionador.live. SvelteKit 2 + Svelte 5 + TypeScript, `adapter-node`.
+PWA personal de GPS con dos modos: **tracking en vivo** (seguimiento continuo en primer plano con wake lock) y **marcar puntos específicos del camino y registrarlos**. Durante el tracking, la app detecta **reencuentros**: al acercarte (≤40 m) a un punto marcado antes, avisa "Ya habías estado aquí: lo marcaste el día tal" (con histéresis de salida a 60 m para no parpadear, aviso solo al entrar, y vibración en Android). Vive en https://coleccionador.live. SvelteKit 2 + Svelte 5 + TypeScript, `adapter-node`.
 
 ## Cómo funciona el marcado
 
@@ -23,6 +23,7 @@ En `localhost` todo funciona (contexto seguro). En desktop la precisión es de W
 - `src/lib/domain/` — capa de dominio, TypeScript puro sin Svelte:
   - `geolocation/tracker.ts` — tracking continuo (`watchPosition`)
   - `geolocation/capture.ts` — captura de UN punto con afinado de precisión
+  - `geolocation/proximity.ts` — reencuentros: haversine + radios con histéresis
   - `wake-lock/wake-lock.ts` — pantalla despierta durante el tracking
   - `persistence/db.ts` + `points-repo.ts` + `photos-repo.ts` — IndexedDB (Dexie): puntos y fotos
   - `photos/photo-processor.ts` — compresión de fotos en cliente (canvas → JPEG)

@@ -13,7 +13,9 @@ export interface ProcessedPhoto {
 	thumb: Blob;
 }
 
-async function decode(file: File): Promise<ImageBitmap | HTMLImageElement> {
+type DecodedImage = ImageBitmap | HTMLImageElement;
+
+async function decode(file: File): Promise<DecodedImage> {
 	try {
 		// 'from-image' aplica la orientación EXIF (fotos de cámara vienen rotadas)
 		return await createImageBitmap(file, { imageOrientation: 'from-image' });
@@ -32,22 +34,26 @@ async function decode(file: File): Promise<ImageBitmap | HTMLImageElement> {
 	}
 }
 
-function dimensions(source: ImageBitmap | HTMLImageElement): { w: number; h: number } {
+function dimensions(source: DecodedImage | HTMLCanvasElement): { w: number; h: number } {
 	if (source instanceof HTMLImageElement) {
 		return { w: source.naturalWidth, h: source.naturalHeight };
 	}
 	return { w: source.width, h: source.height };
 }
 
-function toJpeg(source: ImageBitmap | HTMLImageElement, maxPx: number): Promise<Blob> {
+function drawScaled(source: DecodedImage | HTMLCanvasElement, maxPx: number): HTMLCanvasElement {
 	const { w, h } = dimensions(source);
 	const scale = Math.min(1, maxPx / Math.max(w, h));
 	const canvas = document.createElement('canvas');
 	canvas.width = Math.max(1, Math.round(w * scale));
 	canvas.height = Math.max(1, Math.round(h * scale));
 	const ctx = canvas.getContext('2d');
-	if (!ctx) return Promise.reject(new Error('canvas 2d no disponible'));
+	if (!ctx) throw new Error('canvas 2d no disponible');
 	ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+	return canvas;
+}
+
+function toJpeg(canvas: HTMLCanvasElement): Promise<Blob> {
 	return new Promise((resolve, reject) => {
 		canvas.toBlob(
 			(blob) => (blob ? resolve(blob) : reject(new Error('toBlob falló'))),
@@ -59,11 +65,15 @@ function toJpeg(source: ImageBitmap | HTMLImageElement, maxPx: number): Promise<
 
 export async function processPhoto(file: File): Promise<ProcessedPhoto> {
 	const source = await decode(file);
+	let fullCanvas: HTMLCanvasElement;
 	try {
-		const full = await toJpeg(source, FULL_MAX_PX);
-		const thumb = await toJpeg(source, THUMB_MAX_PX);
-		return { full, thumb };
+		// la fuente full-res (hasta 48 MP ≈ cientos de MB de RGBA) se dibuja UNA
+		// sola vez y se libera de inmediato; la miniatura sale del canvas de 1600px
+		fullCanvas = drawScaled(source, FULL_MAX_PX);
 	} finally {
 		if ('close' in source) source.close();
 	}
+	const full = await toJpeg(fullCanvas);
+	const thumb = await toJpeg(drawScaled(fullCanvas, THUMB_MAX_PX));
+	return { full, thumb };
 }
