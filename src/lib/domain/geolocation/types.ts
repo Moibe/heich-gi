@@ -10,7 +10,15 @@ export interface GeoPoint {
 	timestamp: number;
 }
 
+/** Un punto marcado y registrado por el usuario */
+export interface MarkedPoint extends GeoPoint {
+	id: string;
+	label: string;
+}
+
 export type TrackingStatus = 'idle' | 'acquiring' | 'tracking' | 'permission-denied' | 'unavailable';
+
+export type CaptureStatus = 'idle' | 'acquiring' | 'permission-denied' | 'unavailable' | 'no-signal';
 
 /**
  * Umbral para considerar un fix como preciso. GPS real ronda 5-20 m;

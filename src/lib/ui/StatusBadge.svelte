@@ -1,14 +1,17 @@
 <script lang="ts">
-	import type { TrackingStatus } from '$lib/domain/geolocation/types';
+	import type { CaptureStatus, TrackingStatus } from '$lib/domain/geolocation/types';
 
-	let { status }: { status: TrackingStatus } = $props();
+	type BadgeStatus = TrackingStatus | CaptureStatus;
 
-	const LABELS: Record<TrackingStatus, string> = {
+	let { status }: { status: BadgeStatus } = $props();
+
+	const LABELS: Record<BadgeStatus, string> = {
 		idle: 'Inactivo',
 		acquiring: 'Buscando señal…',
 		tracking: 'Rastreando',
 		'permission-denied': 'Permiso denegado',
-		unavailable: 'GPS no disponible'
+		unavailable: 'GPS no disponible',
+		'no-signal': 'Sin señal GPS'
 	};
 </script>
 
@@ -47,7 +50,8 @@
 	}
 
 	.permission-denied .dot,
-	.unavailable .dot {
+	.unavailable .dot,
+	.no-signal .dot {
 		background: var(--error);
 	}
 

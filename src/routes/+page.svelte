@@ -1,17 +1,23 @@
 <script lang="ts">
+	import MarkPanel from '$lib/ui/MarkPanel.svelte';
+	import PointsList from '$lib/ui/PointsList.svelte';
 	import TrackingPanel from '$lib/ui/TrackingPanel.svelte';
 </script>
 
 <svelte:head>
-	<title>Heich GI</title>
+	<title>Coleccionador</title>
 </svelte:head>
 
 <header>
-	<h1>Heich GI</h1>
-	<p>Tracker GPS · Fase 1</p>
+	<h1>Coleccionador</h1>
+	<p>Tracking y registro de puntos del camino</p>
 </header>
 
-<TrackingPanel />
+<div class="stack">
+	<TrackingPanel />
+	<MarkPanel />
+	<PointsList />
+</div>
 
 <style>
 	header {
@@ -29,5 +35,11 @@
 		margin: 0.3rem 0 0;
 		color: var(--text-dim);
 		font-size: 0.9rem;
+	}
+
+	.stack {
+		display: flex;
+		flex-direction: column;
+		gap: 1.2rem;
 	}
 </style>

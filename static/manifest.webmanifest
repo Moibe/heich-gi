@@ -1,8 +1,8 @@
 {
 	"id": "/",
-	"name": "Heich GI — Tracker GPS",
-	"short_name": "Heich",
-	"description": "Tracker GPS personal en primer plano.",
+	"name": "Coleccionador",
+	"short_name": "Coleccionador",
+	"description": "Marca puntos específicos de tu camino y regístralos.",
 	"start_url": "/",
 	"scope": "/",
 	"display": "standalone",
