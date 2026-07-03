@@ -34,6 +34,13 @@ terminal** (llave SSH vía agente + `doctl` autenticado) o el usuario a mano.
 
 ---
 
+> **Atajo (usado en el deploy real, 2026-07-02):** las partes A y C completas
+> están automatizadas en `.github/workflows/bootstrap.yml` (workflow_dispatch,
+> idempotente) — pestaña Actions → "bootstrap heich-gi" → Run workflow. Usa el
+> secret `SSH_PRIVATE_KEY`, así que no necesita SSH local. Los pasos manuales de
+> abajo quedan como referencia/rollback. Nota: ninguna llave local de `~/.ssh`
+> abre el droplet sin passphrase (la candidata con passphrase es `rsa_do`).
+
 ## PARTE A — App viva en :3300 (SSH)
 
 > ⚠️ **Orden crítico** (patrón de siempre): la app debe responder en `:3300` ANTES de activar nginx, si no → 502.

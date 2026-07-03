@@ -1,0 +1,43 @@
+name: bootstrap heich-gi 🛠️ (setup inicial, correr una vez)
+
+# Setup inicial del droplet SIN necesidad de SSH local: clona la app, la deja
+# viva en :3300 bajo pm2, emite el cert de coleccionador.live y activa nginx.
+# Es idempotente: correrlo de nuevo no rompe nada (clona/crea/arranca solo lo
+# que falte). Se dispara a mano: pestaña Actions → bootstrap heich-gi → Run workflow.
+
+on:
+    workflow_dispatch:
+
+jobs:
+    bootstrap:
+        name: clone · env · build · pm2 · cert · nginx
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: install ssh key
+              run: |
+                  install -m 600 -D /dev/null ~/.ssh/id_rsa
+                  echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+                  ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+
+            # Igual que deploy.yml: nvm no está en PATH en shells no-interactivas,
+            # se carga explícito. El && encadenado aborta al primer fallo.
+            - name: app viva en :3300 (clone + .env + build + pm2)
+              run: |
+                  ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && { [ -d ~/code/heich-gi ] || git clone git@github.com:Moibe/heich-gi.git ~/code/heich-gi; } && cd ~/code/heich-gi && git checkout main && git pull origin main && { [ -f .env ] || printf "ORIGIN=https://coleccionador.live\nPORT=3300\nHOST=127.0.0.1\n" > .env; } && npm ci && npm run build && set -a && . ./.env && set +a && (pm2 restart heich-gi --update-env 2>/dev/null || pm2 start build/index.js --name heich-gi --update-env) && pm2 save && sleep 2 && curl -s -o /dev/null -w "app en :3300 -> http=%{http_code}\n" http://127.0.0.1:3300/'
+
+            # certonly no toca configs de nginx; --keep-until-expiring lo hace
+            # idempotente. El symlink activa el archivo que nx-routes ya dejó
+            # en sites-available.
+            - name: cert + activar sitio en nginx
+              run: |
+                  ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'certbot certonly --nginx --keep-until-expiring -n --agree-tos -d coleccionador.live -d www.coleccionador.live && { [ -L /etc/nginx/sites-enabled/coleccionador.live ] || ln -s /etc/nginx/sites-available/coleccionador.live /etc/nginx/sites-enabled/coleccionador.live; } && nginx -t && systemctl reload nginx'
+
+            - name: verificación final
+              run: |
+                  curl -s -o /dev/null -w "https      -> %{http_code}\n" https://coleccionador.live/
+                  curl -s -o /dev/null -w "manifest   -> %{http_code}\n" https://coleccionador.live/manifest.webmanifest
+                  curl -s -o /dev/null -w "http→https -> %{http_code}\n" -L http://coleccionador.live/
+
+            - name: cleanup
+              run: rm -rf ~/.ssh

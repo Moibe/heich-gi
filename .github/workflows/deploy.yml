@@ -25,7 +25,7 @@ jobs:
             # algo falla, así pm2 NO reinicia con un build roto (sin downtime).
             - name: deploy on droplet
               run: |
-                  ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/heich-gi && git checkout main && git pull origin main && npm ci && npm run build && pm2 restart heich-gi --update-env'
+                  ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} 'if [ ! -d ~/code/heich-gi ]; then echo "droplet sin bootstrap todavía — corre el workflow bootstrap primero"; exit 0; fi; export NVM_DIR="$HOME/.nvm" && . "$NVM_DIR/nvm.sh" && nvm use node >/dev/null && cd ~/code/heich-gi && git checkout main && git pull origin main && { [ -f .env ] || printf "ORIGIN=https://coleccionador.live\nPORT=3300\nHOST=127.0.0.1\n" > .env; } && npm ci && npm run build && set -a && . ./.env && set +a && (pm2 restart heich-gi --update-env 2>/dev/null || pm2 start build/index.js --name heich-gi --update-env) && pm2 save'
 
             - name: cleanup
               run: rm -rf ~/.ssh
