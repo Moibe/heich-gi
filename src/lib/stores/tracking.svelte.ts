@@ -1,5 +1,5 @@
 import { GeoTracker } from '$lib/domain/geolocation/tracker';
-import { ProximityWatcher, type NearbyHit } from '$lib/domain/geolocation/proximity';
+import { EXIT_RADIUS_M, ProximityWatcher, type NearbyHit } from '$lib/domain/geolocation/proximity';
 import type { GeoPoint, TrackingStatus } from '$lib/domain/geolocation/types';
 import { WakeLockManager } from '$lib/domain/wake-lock/wake-lock';
 import { ConsoleSink, type PointSink } from '$lib/domain/transport/point-sink';
@@ -13,7 +13,10 @@ class TrackingStore {
 	points = $state<GeoPoint[]>([]);
 	wakeLockActive = $state(false);
 	/** Puntos marcados previamente dentro del radio de encuentro, más cercano primero */
-	nearby = $state<NearbyHit[]>([]);
+	#nearby = $state<NearbyHit[]>([]);
+	nearby = $derived(
+		this.#nearby.filter((h) => markedPoints.points.some((p) => p.id === h.point.id))
+	);
 
 	running = $derived(this.status === 'acquiring' || this.status === 'tracking');
 
@@ -29,10 +32,12 @@ class TrackingStore {
 			if (this.points.length > MAX_POINTS_IN_MEMORY) this.points.shift();
 			void this.#sink.push(point);
 
-			const { entered, nearby } = this.#proximity.update(point, markedPoints.points);
-			this.nearby = nearby;
-			if (entered.length > 0) {
-				navigator.vibrate?.(200); // Android; iOS lo ignora y queda el aviso visual
+			if (point.accuracy <= EXIT_RADIUS_M) {
+				const { entered, nearby } = this.#proximity.update(point, markedPoints.points);
+				this.#nearby = nearby;
+				if (entered.length > 0) {
+					navigator.vibrate?.(200); // Android; iOS lo ignora y queda el aviso visual
+				}
 			}
 		},
 		onStatus: (status) => {
@@ -58,7 +63,7 @@ class TrackingStore {
 		void this.#wakeLock.disable();
 		// al reiniciar el tracking, los reencuentros vuelven a avisar
 		this.#proximity.reset();
-		this.nearby = [];
+		this.#nearby = [];
 	}
 }
 

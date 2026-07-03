@@ -47,10 +47,16 @@ export class ProximityWatcher {
 		const stillInside = new Set<string>();
 
 		for (const point of points) {
-			if (now - point.timestamp < MIN_POINT_AGE_MS) continue;
 			const distance = distanceMeters(fix, point);
 			const wasInside = this.#inside.has(point.id);
 			const isInside = distance <= (wasInside ? EXIT_RADIUS_M : ENTER_RADIUS_M);
+
+			if (now - point.timestamp < MIN_POINT_AGE_MS) {
+				// too young to announce — track position silently so aging doesn't look like entry
+				if (isInside) stillInside.add(point.id);
+				continue;
+			}
+
 			if (!isInside) continue;
 			stillInside.add(point.id);
 			const hit: NearbyHit = { point, distance };
