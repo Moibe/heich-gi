@@ -5,7 +5,7 @@ terminal** (llave SSH vía agente + `doctl` autenticado) o el usuario a mano.
 
 ## Contexto
 
-- **App**: SvelteKit 2 + Svelte 5, `adapter-node`, sin base de datos (fase 1). Repo: `Moibe/heich-gi` (rama `main`).
+- **App**: SvelteKit 2 + Svelte 5, `adapter-node`. SQLite (Drizzle + better-sqlite3) en `~/code/heich-gi/local.db` para el receptor OwnTracks — el archivo NO está en git y sobrevive los `git pull` del deploy. Repo: `Moibe/heich-gi` (rama `main`).
 - **Droplet**: `gradioFish` — IP `165.22.53.200`, Ubuntu, usuario `root`. pm2 + nginx (configs en el repo hermano `nx-routes`, auto-deploy por Action al push a `main`; el symlink en `sites-enabled` es manual la primera vez).
 - **Dominio**: `coleccionador.live`, comprado en **Namecheap**, DNS administrado en **DigitalOcean** (zona ya creada el 2026-07-02: apex + www → 165.22.53.200).
 - **Puerto**: `3300` (3000 = quiniela, 3100 y 3200 ocupados — verificar en A0 igualmente).
@@ -25,6 +25,7 @@ terminal** (llave SSH vía agente + `doctl` autenticado) o el usuario a mano.
    - `SSH_PRIVATE_KEY` — la misma llave que usa quiniela
    - `SSH_HOST` = `165.22.53.200`
    - `SSH_USER` = `root`
+   - `OWNTRACKS_USER` / `OWNTRACKS_PASS` — credenciales del receptor OwnTracks (`POST /location`). deploy.yml las re-escribe en el `.env` del droplet en cada deploy: rotar = cambiar el secret + re-deploy. Solo letras/números/guiones (van embebidas en la línea ssh del workflow).
 4. **Push de `nx-routes`** (usuario): el archivo `nx-routes/coleccionador.live` ya está escrito → commit + push (el Action lo coloca en `sites-available`; NO se activa hasta el symlink de la parte C).
 5. Llave SSH cargada en el agente local (tiene passphrase; sin esto el SSH no-interactivo falla con "error in libcrypto"):
    ```bash
@@ -133,7 +134,7 @@ Y en el teléfono:
 4. iOS: verificar que el permiso se re-pregunta al reabrir (comportamiento esperado, documentado).
 
 ## Redespliegue futuro
-Push a `main` → el Action `.github/workflows/deploy.yml` hace pull + build + `pm2 restart heich-gi`.
+Push a `main` → el Action `.github/workflows/deploy.yml` hace pull + sync de credenciales OwnTracks al `.env` + build + `npm run db:migrate` + `pm2 restart heich-gi`.
 
 ## Rollback rápido
 - App: `ssh root@165.22.53.200 'pm2 stop heich-gi'`.

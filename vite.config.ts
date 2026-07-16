@@ -3,6 +3,12 @@ import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+	// Puerto dedicado en dev: heich-gi es una PWA (manifest con scope "/"), y al
+	// instalarse "reclama" todo el origin localhost:PUERTO. Si compartiera el 5173
+	// default con otras apps Vite, su "Abrir en la app" se colaría en ellas. Con un
+	// puerto propio su scope PWA queda aislado. (No afecta prod: allá es coleccionador.live.)
+	server: { port: 5180, strictPort: true },
+	preview: { port: 5180, strictPort: true },
 	plugins: [
 		sveltekit({
 			compilerOptions: {

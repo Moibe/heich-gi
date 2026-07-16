@@ -10,6 +10,10 @@ PWA personal de GPS con dos modos: **tracking en vivo** (seguimiento continuo en
 
 Puntos y fotos viven en **IndexedDB** (vía Dexie): asíncrona (no bloquea la UI), guarda blobs binarios nativos y tiene cuota generosa (~1,000 fotos ≈ 300 MB). Sobreviven cierres de la app y deploys; se pierden solo al desinstalar la PWA. Los puntos de la era localStorage se migran automáticamente al primer arranque (con respaldo en `heich-gi:points:respaldo-migracion`). Cambios entre contextos del mismo origin se sincronizan por BroadcastChannel.
 
+## Receptor OwnTracks (tracking en background)
+
+Las PWAs no pueden geolocalizar en background, así que el tracking continuo real lo hace la app nativa [OwnTracks](https://owntracks.org) (modo HTTP) apuntada a `POST /location` con HTTP Basic auth. Los fixes se guardan en SQLite en el droplet (Drizzle + better-sqlite3, tabla `fixes`, dedupe por `(device, tst)` porque OwnTracks re-envía su cola offline). Historial: `GET /location/history?limit=&since=&device=` con las mismas credenciales. Sin `OWNTRACKS_USER`/`OWNTRACKS_PASS` en el entorno el receptor responde 503 — nunca opera abierto. Los mensajes de OwnTracks que no son `_type: location` (status, waypoint…) se aceptan y se ignoran para no atorar su cola con reintentos.
+
 ## Desarrollo
 
 ```sh
@@ -29,6 +33,8 @@ En `localhost` todo funciona (contexto seguro). En desktop la precisión es de W
   - `photos/photo-processor.ts` — compresión de fotos en cliente (canvas → JPEG)
   - `format/coordinates.ts` — formateo (decimal, DMS, precisión)
   - `transport/point-sink.ts` — interfaz `PointSink`: hoy consola, mañana los endpoints de SvelteKit (opción B)
+- `src/lib/server/` — solo-server: `db/` (Drizzle + better-sqlite3, schema y conexión) y `basic-auth.ts`
+- `src/routes/location/` — receptor OwnTracks (`POST /location`) e historial (`GET /location/history`)
 - `src/lib/stores/` — puentes reactivos dominio → UI (runas): `tracking.svelte.ts` y `points.svelte.ts`
 - `src/lib/ui/` — componentes visuales (TrackingPanel, MarkPanel, PointsList, PhotoViewer, CoordsDisplay, StatusBadge)
 - `src/app.html` — meta tags PWA/iOS · `static/manifest.webmanifest` — instalabilidad
@@ -46,4 +52,5 @@ Push a `main` → GitHub Action → droplet (pm2 `heich-gi`, puerto 3300, nginx 
 
 - Splash screens iOS (`apple-touch-startup-image`, generar con `npx pwa-asset-generator`).
 - Service worker (offline) — fase 2.
-- Backend real para los puntos (FastAPI o Firebase) detrás de `PointSink`.
+- Puntos marcados de la PWA al server detrás de `PointSink` (el backend ya existe: los endpoints de SvelteKit + SQLite del receptor).
+- Cruzar los reencuentros con el historial OwnTracks (hoy solo usan los puntos marcados en el dispositivo).
