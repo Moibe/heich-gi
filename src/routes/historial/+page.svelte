@@ -1,5 +1,5 @@
 <script lang="ts">
-	import HistoryPanel from '$lib/ui/HistoryPanel.svelte';
+	import HistoryMap from '$lib/ui/HistoryMap.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -10,7 +10,7 @@
 </svelte:head>
 
 <div class="stack">
-	<HistoryPanel fixes={data.fixes} />
+	<HistoryMap fixes={data.fixes} />
 </div>
 
 <style>
