@@ -35,3 +35,8 @@ export function formatSpeed(metersPerSecond: number | null): string {
 export function formatTime(timestamp: number): string {
 	return new Date(timestamp).toLocaleTimeString();
 }
+
+/** URL de Google Maps para unas coordenadas sueltas (lat/lon planos) */
+export function mapsUrl(lat: number, lon: number): string {
+	return `https://www.google.com/maps?q=${lat},${lon}`;
+}

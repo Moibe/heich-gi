@@ -1,14 +1,10 @@
 <script lang="ts">
 	import { isPrecise } from '$lib/domain/geolocation/types';
-	import { formatAccuracy, formatDecimal, formatTime } from '$lib/domain/format/coordinates';
+	import { formatAccuracy, formatDecimal, formatTime, mapsUrl } from '$lib/domain/format/coordinates';
 	import { points, type PhotoView } from '$lib/stores/points.svelte';
 	import PhotoViewer from './PhotoViewer.svelte';
 
 	let viewing = $state<PhotoView | null>(null);
-
-	function mapsUrl(lat: number, lon: number): string {
-		return `https://www.google.com/maps?q=${lat},${lon}`;
-	}
 
 	function onPickPhoto(pointId: string, e: Event) {
 		const input = e.currentTarget as HTMLInputElement;
