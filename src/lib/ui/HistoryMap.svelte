@@ -39,8 +39,8 @@
 			L.circleMarker([f.lat, f.lon], {
 				radius: 6,
 				weight: 2,
-				color: good ? '#34d399' : '#93a4bf',
-				fillColor: good ? '#34d399' : '#93a4bf',
+				color: good ? '#facc15' : '#93a4bf',
+				fillColor: good ? '#facc15' : '#93a4bf',
 				fillOpacity: 0.85
 			})
 				.bindPopup(popupHtml(f))
